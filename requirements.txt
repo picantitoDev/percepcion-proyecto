@@ -1,0 +1,9 @@
+streamlit
+torch
+torchvision
+Pillow
+mlflow
+dagshub
+plotly
+pandas
+numpy
