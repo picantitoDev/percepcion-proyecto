@@ -66,38 +66,42 @@ if 'model' not in st.session_state:
 # FUNCIONES AUXILIARES
 # ==========================================
 
+import os
+
 @st.cache_resource
 def load_model_from_mlflow():
-    """Carga el modelo desde MLflow"""
     try:
-        # Configurar DagsHub
         dagshub.init(
-            repo_owner='picantitoDev',
-            repo_name='percepcion-proyecto',
+            repo_owner="picantitoDev",
+            repo_name="percepcion-proyecto",
             mlflow=True
         )
-        
-        mlflow.set_tracking_uri("https://dagshub.com/picantitoDev/percepcion-proyecto.mlflow")
-        
-        # Intentar cargar modelo de producción primero
+
+        # Credenciales desde Streamlit Secrets
+        os.environ["MLFLOW_TRACKING_USERNAME"] = st.secrets["MLFLOW_TRACKING_USERNAME"]
+        os.environ["MLFLOW_TRACKING_PASSWORD"] = st.secrets["MLFLOW_TRACKING_PASSWORD"]
+
+        mlflow.set_tracking_uri(st.secrets["MLFLOW_TRACKING_URI"])
+
+        # Cargar modelo
         try:
             model_uri = "models:/ResNet18/Production"
             loaded_model = mlflow.pytorch.load_model(model_uri)
             stage = "Production"
         except:
-            # Si no existe en Production, usar la versión más reciente
             model_uri = "models:/ResNet18/latest"
             loaded_model = mlflow.pytorch.load_model(model_uri)
             stage = "Latest"
-        
-        loaded_model.eval()
-        
+
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         loaded_model = loaded_model.to(device)
-        
+        loaded_model.eval()
+
         return loaded_model, device, None, stage
+
     except Exception as e:
         return None, None, str(e), None
+
 
 def get_image_transform():
     """Retorna las transformaciones para la imagen"""
