@@ -78,10 +78,13 @@ def load_model_from_mlflow():
         )
 
         # Credenciales desde Streamlit Secrets
-        os.environ["MLFLOW_TRACKING_USERNAME"] = st.secrets["MLFLOW_TRACKING_USERNAME"]
-        os.environ["MLFLOW_TRACKING_PASSWORD"] = st.secrets["MLFLOW_TRACKING_PASSWORD"]
+        MLFLOW_USER = st.secrets.get("MLFLOW_TRACKING_USERNAME", os.getenv("MLFLOW_TRACKING_USERNAME"))
+        MLFLOW_PASS = st.secrets.get("MLFLOW_TRACKING_PASSWORD", os.getenv("MLFLOW_TRACKING_PASSWORD"))
+        MLFLOW_URI  = st.secrets.get("MLFLOW_TRACKING_URI", os.getenv("MLFLOW_TRACKING_URI"))
 
-        mlflow.set_tracking_uri(st.secrets["MLFLOW_TRACKING_URI"])
+        os.environ["MLFLOW_TRACKING_USERNAME"] = MLFLOW_USER
+        os.environ["MLFLOW_TRACKING_PASSWORD"] = MLFLOW_PASS
+        mlflow.set_tracking_uri(MLFLOW_URI)
 
         # Cargar modelo
         try:
