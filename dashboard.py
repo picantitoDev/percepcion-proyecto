@@ -27,6 +27,70 @@ import mlflow
 import dagshub
 from dotenv import load_dotenv
 
+class DeepResNet18(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        base = models.resnet18(weights=None)
+        in_features = base.fc.in_features
+
+        base.fc = nn.Sequential(
+            nn.Linear(in_features, 512),
+            nn.ReLU(),
+            nn.BatchNorm1d(512),
+
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.BatchNorm1d(256),
+
+            nn.Linear(256, 256),
+            nn.ReLU(),
+
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(128),
+
+            nn.Linear(128, 128),
+            nn.ReLU(),
+
+            nn.Linear(128, 64),
+            nn.ReLU(),
+
+            nn.Linear(64, 32),
+            nn.ReLU(),
+
+            nn.Linear(32, 2)
+        )
+
+        self.conv1 = base.conv1
+        self.bn1 = base.bn1
+        self.relu = base.relu
+        self.maxpool = base.maxpool
+
+        self.layer1 = base.layer1
+        self.layer2 = base.layer2
+        self.layer3 = base.layer3
+        self.layer4 = base.layer4
+
+        self.avgpool = base.avgpool
+        self.fc = base.fc
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        return x
+
 # =====================================================
 # 2. CONFIGURACIÓN DE PÁGINA Y ESTILOS
 # =====================================================
@@ -254,13 +318,13 @@ def load_model_from_mlflow() -> Tuple[Optional[nn.Module], Optional[torch.device
         mlflow.set_tracking_uri(MLFLOW_URI)
 
         try:
-            model_uri = "models:/ResNet18/Production"
+            model_uri = "models:/ResnetPercepcion/Production"
             model = mlflow.pytorch.load_model(model_uri)
-            stage = "Producción"
+            stage = "Production"
         except:
-            model_uri = "models:/ResNet18/latest"
+            model_uri = "models:/ResnetPercepcion/latest"
             model = mlflow.pytorch.load_model(model_uri)
-            stage = "Última versión"
+            stage = "Staging"
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = model.to(device)
@@ -408,7 +472,7 @@ with st.sidebar:
     st.markdown("### ⚙️ Panel de Control")
     
     col_s1, col_s2 = st.columns(2)
-    col_s1.metric("Modelo", "ResNet18")
+    col_s1.metric("Modelo", "ResnetPercepcion")
     col_s2.metric("Versión", "2.0")
 
     st.markdown("---")
