@@ -674,7 +674,7 @@ elif page == "ℹ️ Información":
     
     with col_info:
         st.markdown("""
-        ### 🚀 DeepFindR v2.0
+        ### 🚀 Deep v2.0
         
         Plataforma de **Visión Artificial Médica** diseñada para la segmentación y clasificación rápida de anomalías en resonancias magnéticas cerebrales.
         
