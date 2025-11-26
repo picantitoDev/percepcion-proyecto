@@ -478,18 +478,23 @@ with st.sidebar:
     st.markdown("---")
 
     if st.button("🔌 CONECTAR MODELO", use_container_width=True):
-        with st.spinner("Estableciendo enlace seguro con MLflow..."):
-            model, device, error, stage = load_model_from_mlflow()
+      with st.spinner("Estableciendo enlace seguro con MLflow..."):
+          try:
+              model, device, error, stage = load_model_from_mlflow()
 
-            if error:
-                st.error(f"Error de conexión: {error}")
-                st.session_state.model_loaded = False
-            else:
-                st.session_state.model = model
-                st.session_state.device = device
-                st.session_state.model_stage = stage
-                st.session_state.model_loaded = True
-                st.success("Sistema en línea")
+              if error:
+                  st.error(f"Error de conexión: {error}")
+                  st.session_state.model_loaded = False
+              else:
+                  st.session_state.model = model
+                  st.session_state.device = device
+                  st.session_state.model_stage = str(stage) if stage else "Unknown"  # ← CONVERSIÓN EXPLÍCITA
+                  st.session_state.model_loaded = True
+                  st.success("✅ Sistema en línea")
+                  
+          except Exception as e:
+              st.error(f"Error inesperado: {str(e)}")
+              st.session_state.model_loaded = False
 
     st.markdown("---")
     
