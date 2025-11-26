@@ -317,15 +317,26 @@ def load_model_from_mlflow() -> Tuple[Optional[nn.Module], Optional[torch.device
 
         mlflow.set_tracking_uri(MLFLOW_URI)
 
+        model = None
+        stage = None
+        
+        # Intentar cargar modelo de Production
         try:
             model_uri = "models:/ResnetPercepcion/Production"
             model = mlflow.pytorch.load_model(model_uri)
             stage = "Production"
-        except:
-            model_uri = "models:/ResnetPercepcion/latest"
-            model = mlflow.pytorch.load_model(model_uri)
-            stage = "Staging"
+        except Exception as prod_error:
+            # Si falla Production, intentar Staging/latest
+            try:
+                model_uri = "models:/ResnetPercepcion/latest"
+                model = mlflow.pytorch.load_model(model_uri)
+                stage = "Staging"
+            except Exception as staging_error:
+                # Si ambos fallan, retornar el error
+                error_msg = f"No se pudo cargar el modelo. Production: {str(prod_error)[:100]}. Staging: {str(staging_error)[:100]}"
+                return None, None, error_msg, None
 
+        # Si llegamos aquí, el modelo se cargó exitosamente
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = model.to(device)
         model.eval()
@@ -333,7 +344,9 @@ def load_model_from_mlflow() -> Tuple[Optional[nn.Module], Optional[torch.device
         return model, device, None, stage
 
     except Exception as e:
-        return None, None, str(e), None
+        # Error general en la configuración de MLflow o DagsHub
+        error_msg = f"Error al inicializar MLflow: {str(e)}"
+        return None, None, error_msg, None
 
 # =====================================================
 # 6. FUNCIONES DE VISUALIZACIÓN (Estilizadas para Dark Mode)
